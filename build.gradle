@@ -1,0 +1,34 @@
+apply plugin: 'org.springframework.boot'
+
+dependencies {
+    implementation project(':common')
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    /*
+     * STOMP 브로커 릴레이에 필요하다.
+     *
+     * WebSocketConfig 가 enableStompBrokerRelay 로 메시지 전달을 RabbitMQ 에
+     * 위임하는데, Spring 은 그 TCP 연결을 만들 때 reactor.netty.tcp.TcpClient 를
+     * 찾는다. 없으면 부팅이 이렇게 죽는다.
+     *   IllegalStateException: No compatible version of Reactor Netty
+     *
+     * 모놀리식일 때는 riot 이 쓰던 spring-boot-starter-webflux 가 이걸 딸려와서
+     * 우연히 채워주고 있었다. 모듈을 나누니 chat 이 실제로 무엇에 의존하는지
+     * 드러났고, 이제 명시적으로 선언한다.
+     *
+     * 아직 서버 메모리 브로커(enableSimpleBroker)로 되돌릴 수는 없다.
+     * 그러면 chat 파드가 여러 개일 때 파드마다 브로커가 따로 놀아 대화가 갈라진다.
+     *
+     * ⚠️ reactor-netty-core 만으로는 부족하다. Spring 의 감지 코드가 보는 클래스가
+     *    reactor.netty.http.client.HttpClient 이고, 그건 reactor-netty-http 에 있다.
+     *    (reactor-netty 1.x 인지 판별하는 용도라 TCP 만 쓸 때도 이 클래스를 본다)
+     *    core 는 http 가 전이 의존으로 끌어온다.
+     *
+     * webflux 를 통째로 넣지 않는 이유: chat 은 WebClient 를 쓰지 않는다.
+     * (버전은 Spring Boot BOM 이 관리한다)
+     */
+    implementation 'io.projectreactor.netty:reactor-netty-http'
+
+    runtimeOnly 'org.postgresql:postgresql'
+}
