@@ -10,9 +10,9 @@ name: chat-ci-cd
 #           common 은 GitHub Packages 에서 받으므로 인증이 필요하다.
 on:
   pull_request:
-    branches: [develop]
+    branches: [develop, main]
   push:
-    branches: [develop]
+    branches: [develop, main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -236,12 +236,17 @@ jobs:
       #   after   GitHub 이 서명한 토큰을 AWS 가 확인하고 이 실행에만 유효한
       #           임시 자격증명을 발급한다. 저장되는 비밀이 없다.
       #
-      # 역할의 신뢰정책이 조직·브랜치로 범위를 제한한다.
-      # 역할 ARN 은 비밀이 아니므로 secret 에 넣지 않는다.
+      # 역할 ARN 은 조직 secret AWS_ROLE_ARN 에 둔다.
+      # 값 자체가 기밀은 아니지만 이 레포들이 public 이라 계정 ID 를 굳이
+      # 노출하지 않는다. 계정이나 역할 이름이 바뀌어도 secret 하나만 고치면
+      # 6개 레포가 함께 따라간다.
+      #
+      # 리전은 코드에 그대로 둔다 — 바뀔 일이 거의 없고, secret 이 늘수록
+      # "왜 실패했지" 의 후보가 늘어난다.
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::359554936090:role/gamehouse-gha-ecr
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ap-northeast-2
 
       - name: Login to Amazon ECR
