@@ -21,7 +21,7 @@ public class ChatWsController {
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatMetrics chatMetrics;
 
-    /** 클라이언트 → /app/rooms/{roomId} 로 전송, 구독자는 /topic/rooms/{roomId} 수신 */
+    /** 클라이언트 → /app/rooms/{roomId} 로 전송, 구독자는 /topic/rooms/{roomId} 수신..Develop태그로만 생성되어 있는 이미지가 있어야함 */
     @MessageMapping("/rooms/{roomId}")
     public void send(@DestinationVariable Long roomId, @Payload SendRequest request,
                      Principal principal) {
