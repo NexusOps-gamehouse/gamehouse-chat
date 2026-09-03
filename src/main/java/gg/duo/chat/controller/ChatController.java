@@ -22,7 +22,7 @@ public class ChatController {
         return chatService.myRooms((Long) auth.getPrincipal());
     }
 
-    /** 방 입장 — 방 정보 + 가장 최근 메시지 한 묶음.. */
+    /** 방 입장 — 방 정보 + 가장 최근 메시지 한 묶음. */
     @GetMapping("/rooms/{roomId}")
     public RoomDetail roomDetail(@PathVariable Long roomId, Authentication auth) {
         return chatService.roomDetail(roomId, (Long) auth.getPrincipal());
