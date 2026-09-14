@@ -42,6 +42,21 @@ public class ChatRoomProvisioningService {
             // 멱등: 이미 있으면 스냅샷만 최신으로 맞춘다.
             room.setPostTitle(postTitle);
             room.setPostStatus(postStatus);
+
+            // ⚠️ 방이 이미 있어도 roomCreated 를 다시 발행한다.
+            //
+            // post 쪽 posts.chat_room_id 는 이 이벤트로만 채워진다. 그런데 그 이벤트가
+            // 유실되면 방은 있는데 글이 방 번호를 모르는 상태가 되고, 되살릴 길이 없었다.
+            //   - 예전에는 발행이 커밋 전이라 post 의 consumer 가 아직 없는 글을 찾아
+            //     조용히 넘어갔다(운영 실측 22% 누락)
+            //   - 지금도 브로커가 죽으면 발행 자체가 실패한다
+            //
+            // 재발행을 여기서 막으면 post 의 보정 배치가 PostCreatedEvent 를 다시 보내도
+            // 방이 이미 있어 그대로 return 되고, chat_room_id 는 영영 비어 있다.
+            //
+            // 받는 쪽(ChatRoomCreatedConsumer)은 setChatRoomId 하나라 몇 번 받아도 결과가
+            // 같다. 중복 발행의 비용은 메시지 한 건이고, 얻는 것은 복구 경로다.
+            events.roomCreated(room);
             return room;
         }
 
